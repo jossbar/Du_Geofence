@@ -66,3 +66,33 @@ override fun onCreate(savedInstanceState: Bundle?) {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
   }
 
+ override fun onMapReady(googleMap: GoogleMap) {
+    map = googleMap
+    map.uiSettings.isMapToolbarEnabled = false
+
+    centerCamera()
+
+    showConfigureLocationStep()
+  }
+
+  private fun centerCamera() {
+    val latLng = intent.extras.get(EXTRA_LAT_LNG) as LatLng
+    val zoom = intent.extras.get(EXTRA_ZOOM) as Float
+    map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
+  }
+ private fun showConfigureLocationStep() {
+    marker.visibility = View.VISIBLE
+    instructionTitle.visibility = View.VISIBLE
+    instructionSubtitle.visibility = View.VISIBLE
+    radiusBar.visibility = View.GONE
+    radiusDescription.visibility = View.GONE
+    message.visibility = View.GONE
+    instructionTitle.text = getString(R.string.instruction_where_description)
+    next.setOnClickListener {
+      reminder.latLng = map.cameraPosition.target
+      showConfigureRadiusStep()
+    }
+   showReminderUpdate()
+  }
+
+
