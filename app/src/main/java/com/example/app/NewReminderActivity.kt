@@ -94,5 +94,66 @@ override fun onCreate(savedInstanceState: Bundle?) {
     }
    showReminderUpdate()
   }
+ private fun showConfigureRadiusStep() {
+    marker.visibility = View.GONE
+    instructionTitle.visibility = View.VISIBLE
+    instructionSubtitle.visibility = View.GONE
+    radiusBar.visibility = View.VISIBLE
+    radiusDescription.visibility = View.VISIBLE
+    message.visibility = View.GONE
+    instructionTitle.text = getString(R.string.instruction_radius_description)
+    next.setOnClickListener {
+      showConfigureMessageStep()
+    }
+    radiusBar.setOnSeekBarChangeListener(radiusBarChangeListener)
+    updateRadiusWithProgress(radiusBar.progress)
+
+    map.animateCamera(CameraUpdateFactory.zoomTo(15f))
+
+    showReminderUpdate()
+  }
+
+  private fun getRadius(progress: Int) = 100 + (2 * progress.toDouble() + 1) * 100
+
+  private fun showConfigureMessageStep() {
+    marker.visibility = View.GONE
+    instructionTitle.visibility = View.VISIBLE
+    instructionSubtitle.visibility = View.GONE
+    radiusBar.visibility = View.GONE
+    radiusDescription.visibility = View.GONE
+    message.visibility = View.VISIBLE
+    instructionTitle.text = getString(R.string.instruction_message_description)
+    next.setOnClickListener {
+      hideKeyboard(this, message)
+
+      reminder.message = message.text.toString()
+
+      if (reminder.message.isNullOrEmpty()) {
+        message.error = getString(R.string.error_required)
+      } else {
+        addReminder(reminder)
+      }
+    }
+    message.requestFocusWithKeyboard()
+
+    showReminderUpdate()
+  }
+
+  private fun addReminder(reminder: Reminder) {
+    getRepository().add(reminder,
+        success = {
+          setResult(Activity.RESULT_OK)
+          finish()
+        },
+        failure = {
+          Snackbar.make(main, it, Snackbar.LENGTH_LONG).show()
+        })
+  }
+
+  private fun showReminderUpdate() {
+    map.clear()
+    showReminderInMap(this, map, reminder)
+  }
+}
 
 
