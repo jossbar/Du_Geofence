@@ -1,5 +1,7 @@
 package com.example.app
 
+import android.content.Context
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 
@@ -10,8 +12,16 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MainActivity : BaseActivity(),  OnMapReadyCallback {
+    companion object {
+        private const val EXTRA_LAT_LNG = "EXTRA_LAT_LNG"
 
+        fun newIntent(context: Context, latLng: LatLng): Intent {
+            val intent = Intent(context, MainActivity::class.java)
+            intent.putExtra(EXTRA_LAT_LNG, latLng)
+            return intent
+        }
+    }
     private lateinit var mMap: GoogleMap
 
     override fun onCreate(savedInstanceState: Bundle?) {
