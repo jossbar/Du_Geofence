@@ -2,8 +2,10 @@ package com.example.app
 
 import android.content.Context
 import android.content.Intent
+import android.location.LocationManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -11,12 +13,14 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_maps.*
 
 
 class MainActivity : BaseActivity(),  OnMapReadyCallback {
     companion object {
         private const val EXTRA_LAT_LNG = "EXTRA_LAT_LNG"
+        private const val MY_LOCATION_REQUEST_CODE = 329
+        private const val NEW_REMINDER_REQUEST_CODE = 330
 
         fun newIntent(context: Context, latLng: LatLng): Intent {
             val intent = Intent(context, MainActivity::class.java)
@@ -24,7 +28,8 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
             return intent
         }
     }
-    private lateinit var mMap: GoogleMap
+    private var map: GoogleMap? = null
+    private lateinit var locationManager: LocationManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,23 +38,27 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        newReminder.visibility = View.GONE
+        currentLocation.visibility = View.GONE
+        newReminder.setOnClickListener {
+            map?.run {
+                val intent = NewReminderActivity.newIntent(
+                        this@MainActivity,
+                        cameraPosition.target,
+                        cameraPosition.zoom)
+                startActivityForResult(intent, NEW_REMINDER_REQUEST_CODE)
+            }
+        }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
+        map = googleMap
 
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+        map.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
 }
