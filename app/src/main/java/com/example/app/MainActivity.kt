@@ -75,7 +75,7 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == NEW_REMINDER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            showreminders()
+            showReminders()
 
             val reminder = getRepository().getLast()
             map?.moveCamera(CameraUpdateFactory.newLatLngZoom(reminder?.latLng, 15f))
@@ -110,9 +110,20 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
                     map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
                 }
             }
+            showReminders()
+
+            centerCamera()
         }
     }
-    private fun showreminders() {
+
+    private fun centerCamera() {
+        if (intent.extras != null && intent.extras.containsKey(EXTRA_LAT_LNG)) {
+            val latLng = intent.extras.get(EXTRA_LAT_LNG) as LatLng
+            map?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))             //get focus center
+        }
+    }
+
+    private fun showReminders() {
         map?.run {
             clear()
             for (reminder in getRepository().getAll()) {
