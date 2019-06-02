@@ -1,10 +1,16 @@
 package com.example.app
 
+import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.design.widget.Snackbar
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.view.View
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -48,6 +54,40 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
                         cameraPosition.target,
                         cameraPosition.zoom)
                 startActivityForResult(intent, NEW_REMINDER_REQUEST_CODE)
+            }
+        }
+
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager //location api
+
+        if (ContextCompat.checkSelfPermission(                      //permision accessing
+                        this,
+                        Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    MY_LOCATION_REQUEST_CODE)
+        }
+    }
+
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == NEW_REMINDER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            showreminders()
+
+            val reminder = getRepository().getLast()
+            map?.moveCamera(CameraUpdateFactory.newLatLngZoom(reminder?.latLng, 15f))
+
+            Snackbar.make(main, R.string.reminder_added_success, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun showreminders() {
+        map?.run {
+            clear()
+            for (reminder in getRepository().getAll()) {
+                showReminderInMap(this@MainActivity, this, reminder)
             }
         }
     }
