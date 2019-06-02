@@ -7,27 +7,27 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Criteria
 import android.location.LocationManager
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.view.View
-
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Marker
 import kotlinx.android.synthetic.main.activity_maps.*
 
 
-class MainActivity : BaseActivity(),  OnMapReadyCallback {
+class MainActivity : BaseActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+
     companion object {
-        private const val EXTRA_LAT_LNG = "EXTRA_LAT_LNG"
         private const val MY_LOCATION_REQUEST_CODE = 329
         private const val NEW_REMINDER_REQUEST_CODE = 330
+        private const val EXTRA_LAT_LNG = "EXTRA_LAT_LNG"
 
         fun newIntent(context: Context, latLng: LatLng): Intent {
             val intent = Intent(context, MainActivity::class.java)
@@ -35,13 +35,15 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
             return intent
         }
     }
+
     private var map: GoogleMap? = null
+
     private lateinit var locationManager: LocationManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -58,9 +60,9 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
             }
         }
 
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager //location api
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        if (ContextCompat.checkSelfPermission(                      //permision checking
+        if (ContextCompat.checkSelfPermission(
                         this,
                         Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -70,8 +72,6 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
                     MY_LOCATION_REQUEST_CODE)
         }
     }
-
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == NEW_REMINDER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
@@ -84,7 +84,7 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int,               //get permision result code
+    override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<out String>,
                                             grantResults: IntArray) {
         if (requestCode == MY_LOCATION_REQUEST_CODE) {
@@ -110,6 +110,7 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
                     map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
                 }
             }
+
             showReminders()
 
             centerCamera()
@@ -119,7 +120,7 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
     private fun centerCamera() {
         if (intent.extras != null && intent.extras.containsKey(EXTRA_LAT_LNG)) {
             val latLng = intent.extras.get(EXTRA_LAT_LNG) as LatLng
-            map?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))             //get focus center
+            map?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
         }
     }
 
@@ -132,12 +133,53 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
         }
     }
 
-
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
+        map?.run {
+            uiSettings.isMyLocationButtonEnabled = false
+            uiSettings.isMapToolbarEnabled = false
+            setOnMarkerClickListener(this@MainActivity)
+        }
 
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
+        onMapAndPermissionReady()
+    }
 
+    override fun onMarkerClick(marker: Marker): Boolean {
+        val reminder = getRepository().get(marker.tag as String)
+
+        if (reminder != null) {
+            showReminderRemoveAlert(reminder)
+        }
+
+        return true
+    }
+
+    private fun showReminderRemoveAlert(reminder: Reminder) {
+        val alertDialog = AlertDialog.Builder(this).create()
+        alertDialog.run {
+            setMessage(getString(R.string.reminder_removal_alert))
+            setButton(AlertDialog.BUTTON_POSITIVE,
+                    getString(R.string.reminder_removal_alert_positive)) { dialog, _ ->
+                removeReminder(reminder)
+                dialog.dismiss()
+            }
+            setButton(AlertDialog.BUTTON_NEGATIVE,
+                    getString(R.string.reminder_removal_alert_negative)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            show()
+        }
+    }
+
+    private fun removeReminder(reminder: Reminder) {
+        getRepository().remove(
+                reminder,
+                success = {
+                    showReminders()
+                    Snackbar.make(main, R.string.reminder_removed_success, Snackbar.LENGTH_LONG).show()
+                },
+                failure = {
+                    Snackbar.make(main, it, Snackbar.LENGTH_LONG).show()
+                })
     }
 }
