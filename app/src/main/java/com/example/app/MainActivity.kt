@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Criteria
 import android.location.LocationManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -59,7 +60,7 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager //location api
 
-        if (ContextCompat.checkSelfPermission(                      //permision accessing
+        if (ContextCompat.checkSelfPermission(                      //permision checking
                         this,
                         Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -83,6 +84,34 @@ class MainActivity : BaseActivity(),  OnMapReadyCallback {
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int,               //get permision result code
+                                            permissions: Array<out String>,
+                                            grantResults: IntArray) {
+        if (requestCode == MY_LOCATION_REQUEST_CODE) {
+            onMapAndPermissionReady()
+        }
+    }
+
+    private fun onMapAndPermissionReady() {
+        if (map != null
+                && ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            map?.isMyLocationEnabled = true
+            newReminder.visibility = View.VISIBLE
+            currentLocation.visibility = View.VISIBLE
+
+            currentLocation.setOnClickListener {
+                val bestProvider = locationManager.getBestProvider(Criteria(), false)
+                val location = locationManager.getLastKnownLocation(bestProvider)
+                if (location != null) {
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    map?.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                }
+            }
+        }
+    }
     private fun showreminders() {
         map?.run {
             clear()
