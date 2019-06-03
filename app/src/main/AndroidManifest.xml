@@ -44,6 +44,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".NewReminderActivity" />
+        <service android:name=".GeofenceTransitionService"/>
     </application>
 
 </manifest>
