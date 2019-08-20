@@ -6,11 +6,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.support.v4.content.ContextCompat
+import android.widget.Button
 import com.example.app.Reminder
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
+import kotlinx.android.synthetic.main.activity_new_reminder.*
+import  kotlinx.android.synthetic.main.activity_maps.*
+
 
 class ReminderRepository(private val context: Context) {
 
@@ -24,7 +28,9 @@ class ReminderRepository(private val context: Context) {
     private val geofencingClient = LocationServices.getGeofencingClient(context)
     private val geofencePendingIntent: PendingIntent by lazy {
         val intent = Intent(context, GeofenceTransitionService::class.java)
+
         PendingIntent.getService(
+
                 context,
                 0,
                 intent,

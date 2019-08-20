@@ -16,6 +16,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.res.ResourcesCompat
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.EditText
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
@@ -79,6 +80,8 @@ fun sendNotification(context: Context, message: String, latLng: LatLng) {
 
         notificationManager.createNotificationChannel(channel)
     }
+
+
 
     val intent = MainActivity.newIntent(context.applicationContext, latLng)
 

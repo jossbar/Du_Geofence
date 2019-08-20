@@ -2,9 +2,14 @@ package com.example.app
 
 import android.Manifest
 import android.app.Activity
+import android.app.Notification
+import android.app.NotificationChannel
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Criteria
 import android.location.LocationManager
 import android.os.Bundle
@@ -13,6 +18,8 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.view.View
+import android.widget.Button
+import android.widget.LinearLayout
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -20,14 +27,18 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.android.synthetic.main.activity_sub.*
+import java.util.*
 
 
-class MainActivity : BaseActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+class MainActivity : BaseActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener, GeofenceTransitionService.ChangeViewState {
 
     companion object {
         private const val MY_LOCATION_REQUEST_CODE = 329
         private const val NEW_REMINDER_REQUEST_CODE = 330
         private const val EXTRA_LAT_LNG = "EXTRA_LAT_LNG"
+        private const val LOG_TAG = "GeoTrIntentService"
+        const val BTN_DONE = "btn_done"
 
         fun newIntent(context: Context, latLng: LatLng): Intent {
             val intent = Intent(context, MainActivity::class.java)
@@ -36,6 +47,8 @@ class MainActivity : BaseActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClick
         }
     }
 
+
+
     private var map: GoogleMap? = null
 
     private lateinit var locationManager: LocationManager
@@ -43,6 +56,22 @@ class MainActivity : BaseActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClick
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+
+        val constraintLayout = findViewById(R.id.constraintLayout) as LinearLayout
+        val button5 = Button(this)
+        val btn = findViewById<Button>(R.id.btn_done)
+        button5.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        button5.text = "Click me"
+        button5.setOnClickListener(View.OnClickListener {
+            val intent = Intent(this, finish::class.java)
+            startActivity(intent)
+        })
+        button5.setBackgroundColor(Color.GREEN)
+        button5.setTextColor(Color.RED)
+        constraintLayout.addView(button5);
+
+
+
 
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
@@ -57,8 +86,15 @@ class MainActivity : BaseActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClick
                         cameraPosition.target,
                         cameraPosition.zoom)
                 startActivityForResult(intent, NEW_REMINDER_REQUEST_CODE)
+
             }
         }
+
+        btn_done.setOnClickListener {
+            val intent = Intent(this, finish::class.java)
+            startActivity(intent)
+        }
+
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -76,6 +112,7 @@ class MainActivity : BaseActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClick
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == NEW_REMINDER_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             showReminders()
+
 
             val reminder = getRepository().getLast()
             map?.moveCamera(CameraUpdateFactory.newLatLngZoom(reminder?.latLng, 15f))
@@ -182,4 +219,17 @@ class MainActivity : BaseActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClick
                     Snackbar.make(main, it, Snackbar.LENGTH_LONG).show()
                 })
     }
+    // Implement interface
+    override fun changeButtonState(): Button {
+        val button = findViewById(R.id.btn_done) as Button
+        return button
+    }
+
+
 }
+
+
+
+
+
+

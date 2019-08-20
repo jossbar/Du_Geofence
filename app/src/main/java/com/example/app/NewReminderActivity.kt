@@ -12,14 +12,15 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.android.synthetic.main.activity_new_reminder.*
+import kotlinx.android.synthetic.main.activity_new_reminder.main
 import kotlin.math.roundToInt
 
 
 class NewReminderActivity : BaseActivity(), OnMapReadyCallback {
 
     private lateinit var map: GoogleMap
-
     private var reminder = Reminder(latLng = null, radius = null, message = null)
 
     private val radiusBarChangeListener = object : SeekBar.OnSeekBarChangeListener {
@@ -38,6 +39,7 @@ class NewReminderActivity : BaseActivity(), OnMapReadyCallback {
         val radius = getRadius(progress)
         reminder.radius = radius
         radiusDescription.text = getString(R.string.radius_description, radius.roundToInt().toString())
+
     }
 
     companion object {
